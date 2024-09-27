@@ -1,13 +1,9 @@
 #!/bin/bash
 
-#=================================================
-# GENERIC START
-#=================================================
-# IMPORT GENERIC HELPERS
-#=================================================
-
 source _common.sh
 source /usr/share/yunohost/helpers
+
+ynh_app_setting_set --key=php_upload_max_filesize --value=1000M
 
 #=================================================
 # INITIALIZE AND STORE SETTINGS
@@ -20,32 +16,23 @@ admin_mail=$(ynh_user_get_info "$admin" mail)
 #=================================================
 # DOWNLOAD, CHECK AND UNPACK SOURCE
 #=================================================
-ynh_script_progression --message="Setting up source files..."
+ynh_script_progression "Setting up source files..."
 
-# Download, check integrity, uncompress and patch the source from app.src
 ynh_setup_source --dest_dir="$install_dir"
-
-chmod 750 "$install_dir"
-chmod -R o-rwx "$install_dir"
-chown -R "$app:www-data" "$install_dir"
 
 #=================================================
 # SYSTEM CONFIGURATION
 #=================================================
-ynh_script_progression --message="Adding system configurations related to $app..." --weight=1
+ynh_script_progression "Adding system configurations related to $app..."
 
-# Create a dedicated PHP-FPM config
-ynh_add_fpm_config
+ynh_config_add_phpfpm
 
-# Create a dedicated NGINX config
-ynh_add_nginx_config
+ynh_config_add_nginx
 
-#=================================================
-# SPECIFIC SETUP
 #=================================================
 # SETUP APPLICATION WITH CURL
 #=================================================
-ynh_script_progression --message="Setting up application with CURL..."
+ynh_script_progression "Setting up application with CURL..."
 
 ynh_local_curl "/?ctrl=offline&action=install&disconnect=1" \
     "lang=$language" \
@@ -61,6 +48,7 @@ ynh_local_curl "/?ctrl=offline&action=install&disconnect=1" \
     "spaceName=YunoHost" \
     "spaceDescription=YunoHost" \
     "spacePublic=0" \
+    "spaceDiskLimit=1" \
     "ctrl=offline" \
     "action=install" \
     "formValidate=1" \
@@ -70,4 +58,4 @@ ynh_local_curl "/?ctrl=offline&action=install&disconnect=1" \
 # END OF SCRIPT
 #=================================================
 
-ynh_script_progression --message="Installation of $app completed"
+ynh_script_progression "Installation of $app completed"
